@@ -65,18 +65,7 @@ def login(request):
 
 
 def index(req):
-    name='数据库原理'
-    list=['a','b',1,2,3]
-    dict={"name":"张三",'age':12,"grade":2}
-    list_dict=[
-        {"name":"张三",'age':12,"grade":2},
-        {"name":"李四",'age':12,"grade":2},
-        {"name":"王五",'age':12,"grade":2}
-    ]
-    return render(req,'index.html',{'name':name,
-                                    'list':list,
-                                    'dict':dict,
-                                    "list_dict":list_dict})
+    return render(req,'index.html')
 
 def student_index(request):
     # 这里可以添加一些逻辑来获取学生的成绩、课程等信息
@@ -88,37 +77,34 @@ def logout(request):
 
 # 教师管理课程
 def manage_courses(request):
-    courses = Course.objects.filter(teacher=request.user)
-    return render(request, 'manager_course.html', {'courses': courses})
+
+    return render(request, 'manager_course.html')
 
 # 添加课程
 def add_course(request):
-    if request.method == "POST":
-        course_name = request.POST['course_name']
-        course_type = request.POST['course_type']
-        credits = request.POST['credits']
-        Course.objects.create(course_name=course_name, course_type=course_type, credits=credits, teacher=request.user)
-        return redirect('manage_courses')
+
     return render(request, 'add_course.html')
 
 # 教师查看公告
 def announcements(request):
-    announcements = Announcement.objects.filter(teacher=request.user)
-    return render(request, 'announcement.html', {'announcements': announcements})
+
+    return render(request, 'announcement.html')
 
 # 学生查看已注册课程
 def my_courses(request):
-    student = request.user.student
-    courses = student.courses.all()
-    return render(request, 'my_courses.html', {'my_courses': courses})
+
+    return render(request, 'my_courses.html')
 
 # 学生查看成绩
 def my_scores(request):
-    student = request.user.student
-    scores = StudentScore.objects.filter(student=student)
-    return render(request, 'my_scores.html', {'my_scores': scores})
+
+    return render(request, 'my_scores.html')
 
 def my_announcements(request):
     # 假设学生公告是对所有学生可见的
-    announcements = Announcement.objects.all()  # 获取所有公告
-    return render(request, 'my_announcements.html', {'announcements': announcements})
+
+    return render(request, 'my_announcements.html')
+def add_announcement(request):
+    return render(request, 'add_announcement.html')
+def teacher_scores(request):
+    return render(request, 'teacher_scores.html')

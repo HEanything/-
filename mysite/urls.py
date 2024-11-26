@@ -29,6 +29,11 @@ urlpatterns = [
     path('my_scores/', views.my_scores, name='my_scores'),
     path('manage_courses/', views.manage_courses, name='manage_courses'),
     path('announcements/', views.announcements, name='announcements'),
+    path('add_course/', views.add_course, name='add_course'),
+    path('add_announcement/', views.add_announcement, name='add_announcement'),
+    path('teacher_scores/', views.teacher_scores, name='teacher_scores')
+
+
 
 
 ]
