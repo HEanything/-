@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>编辑公告</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+            font-family: Arial, sans-serif;
+        }
+        .navbar {
+            background-color: #007bff;
+        }
+        .navbar a {
+            color: white;
+        }
+        .navbar a:hover {
+            color: #f8f9fa;
+        }
+        .form-container {
+            margin-top: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .btn-primary {
+            background-color: #28a745;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">编辑公告</a>
+        <div class="ml-auto">
+            <a href="/logout" class="btn btn-danger">退出登录</a>
+        </div>
+    </nav>
+
+    <div class="container form-container">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="title">公告标题</label>
+                <input type="text" class="form-control" id="title" name="title" value="{{ announcement.0 }}" required>
+            </div>
+            <div class="form-group">
+                <label for="content">公告内容</label>
+                <textarea class="form-control" id="content" name="content" rows="4" required>{{ announcement.1 }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">更新公告</button>
+        </form>
+    </div>
+
+</body>
+</html>

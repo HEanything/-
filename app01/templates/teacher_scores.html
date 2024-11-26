@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>查看成绩</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+            font-family: Arial, sans-serif;
+        }
+        .navbar {
+            background-color: #007bff;
+        }
+        .navbar a {
+            color: white;
+        }
+        .navbar a:hover {
+            color: #f8f9fa;
+        }
+        .table-container {
+            margin-top: 30px;
+        }
+        .table th, .table td {
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #28a745;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">教师查看成绩</a>
+        <div class="ml-auto">
+            <a href="/logout" class="btn btn-danger">退出登录</a>
+        </div>
+    </nav>
+
+    <div class="container table-container">
+        <h2>查看和修改学生成绩</h2>
+
+        {% if scores %}
+        <form method="POST" action="{% url 'update_scores' %}">
+            {% csrf_token %}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>学生姓名</th>
+                        <th>课程名称</th>
+                        <th>平时成绩</th>
+                        <th>出勤成绩</th>
+                        <th>期末成绩</th>
+                        <th>总成绩</th>
+                        <th>成绩等级</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for score in scores %}
+                    <tr>
+                        <td>{{ score.student.user_name }}</td>
+                        <td>{{ score.course.course_name }}</td>
+                        <td><input type="number" name="usual_score_{{ score.id }}" value="{{ score.usual_score }}" step="0.1" class="form-control"></td>
+                        <td><input type="number" name="attendance_score_{{ score.id }}" value="{{ score.attendance_score }}" step="0.1" class="form-control"></td>
+                        <td><input type="number" name="final_score_{{ score.id }}" value="{{ score.final_score }}" step="0.1" class="form-control"></td>
+                        <td>{{ score.total_score }}</td>
+                        <td>{{ score.grade }}</td>
+                        <td><button type="submit" name="edit_{{ score.id }}" class="btn btn-primary">保存</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </form>
+        {% else %}
+        <p>没有成绩记录。</p>
+        {% endif %}
+    </div>
+
+</body>
+</html>
