@@ -211,6 +211,113 @@ def announcements(request):
         if conn:
             close_db_connection(conn)
 
+# 编辑公告视图函数
+def edit_announcement(request, announcement_id):
+    # 检查用户角色是否为教师
+    if request.session.get('role') != 'teacher':
+        messages.error(request, "请先登录")
+        return redirect('/login')
+
+    # 获取教师ID
+    teacher_id = request.session.get('user_id')
+
+    # 连接到数据库
+    conn = connect_db()
+    if conn is None:
+        messages.error(request, "无法连接到数据库，请稍后再试")
+        return redirect('/login')
+
+    try:
+        cur = conn.cursor()
+
+        # 确保当前公告属于该教师
+        cur.execute("""
+            SELECT teacher_id FROM Announcements WHERE id = %s
+        """, (announcement_id,))
+        result = cur.fetchone()
+
+        if result and result[0] == teacher_id:
+            # 获取公告的当前内容
+            cur.execute("""
+                SELECT title, content FROM Announcements WHERE id = %s
+            """, (announcement_id,))
+            announcement = cur.fetchone()
+            if request.method == 'POST':
+                # 获取修改后的标题和内容
+                title = request.POST.get('title')
+                content = request.POST.get('content')
+
+                # 更新公告
+                cur.execute("""
+                    UPDATE Announcements
+                    SET title = %s, content = %s
+                    WHERE id = %s
+                """, (title, content, announcement_id))
+                conn.commit()  # 提交事务
+
+                messages.success(request, "公告更新成功")
+                return redirect('/announcements')  # 重定向到公告列表页
+
+            # 渲染编辑页面，传递当前公告内容
+            return render(request, 'edit_announcement.html', {'announcement': announcement, 'announcement_id': announcement_id})
+        else:
+            messages.error(request, "您没有权限编辑该公告")
+            return redirect('/announcement')
+
+    except Exception as e:
+        messages.error(request, f"发生错误: {e}")
+        return redirect('/announcement')
+
+    finally:
+        if conn:
+            close_db_connection(conn)
+
+
+# 删除公告视图函数
+def delete_announcement(request, announcement_id):
+    # 检查用户角色是否为教师
+    if request.session.get('role') != 'teacher':
+        messages.error(request, "请先登录")
+        return redirect('/login')
+
+    # 获取教师ID
+    teacher_id = request.session.get('user_id')
+
+    # 连接到数据库
+    conn = connect_db()
+    if conn is None:
+        messages.error(request, "无法连接到数据库，请稍后再试")
+        return redirect('/login')
+
+    try:
+        cur = conn.cursor()
+
+        # 确保当前公告属于该教师
+        cur.execute("""
+            SELECT teacher_id FROM Announcements WHERE id = %s
+        """, (announcement_id,))
+        result = cur.fetchone()
+
+        if result and result[0] == teacher_id:
+            # 删除公告
+            cur.execute("""
+                DELETE FROM Announcements WHERE id = %s
+            """, (announcement_id,))
+            conn.commit()  # 提交事务
+
+            messages.success(request, "公告删除成功")
+        else:
+            messages.error(request, "您没有权限删除该公告")
+
+        return redirect('/announcements')  # 重定向到公告列表页
+
+    except Exception as e:
+        messages.error(request, f"发生错误: {e}")
+        return redirect('/announcements')
+
+    finally:
+        if conn:
+            close_db_connection(conn)
 # 发布公告视图
 def add_announcement(request):
     # 检查用户角色是否为教师
@@ -222,6 +329,7 @@ def add_announcement(request):
         title = request.POST.get('title')
         content = request.POST.get('content')
 
+        # 检查标题和内容是否为空
         if not title or not content:
             messages.error(request, "标题和内容不能为空")
             return render(request, 'add_announcement.html')
@@ -238,19 +346,16 @@ def add_announcement(request):
         try:
             cur = conn.cursor()
 
-            # 获取当前时间
-            timestamp = datetime.now()
-
-            # 执行数据库插入公告操作
+            # 执行数据库插入公告操作，publish_date 自动由数据库填充
             cur.execute("""
-                INSERT INTO Announcements (teacher_id, title, content, created_at)
-                VALUES (%s, %s, %s, %s)
-            """, (teacher_id, title, content, timestamp))
+                INSERT INTO Announcements (title, content, teacher_id)
+                VALUES (%s, %s, %s)
+            """, (title, content, teacher_id))
 
             conn.commit()  # 提交事务
 
             messages.success(request, "公告发布成功")  # 发布成功提示
-            return redirect('/announcements')  # 可选择重定向到公告列表页（假设你有此页面）
+            return redirect('/announcements')  # 重定向到公告列表页
 
         except Exception as e:
             messages.error(request, f"发生错误: {e}")
@@ -279,3 +384,5 @@ def my_announcements(request):
 
 def teacher_scores(request):
     return render(request, 'teacher_scores.html')
+
+

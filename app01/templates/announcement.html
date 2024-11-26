@@ -56,16 +56,26 @@
                 </tr>
             </thead>
             <tbody>
-                {% for announcement in announcements %}
+                {% if announcements %}
+                    {% for announcement in announcements %}
+                        <tr>
+                            <td>{{ announcement.1 }}</td> <!-- 公告标题 -->
+                            <td>{{ announcement.2 }}</td> <!-- 发布时间 -->
+                            <td>
+                                <a href="{% url 'edit_announcement' announcement.0 %}" class="btn btn-warning">编辑</a>
+                                <form action="/delete_announcement/{{ announcement.0 }}/" method="POST" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">删除</button>
+                                </form>
+                                
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
                     <tr>
-                        <td>{{ announcement.1 }}</td>
-                        <td>{{ announcement.2 }}</td>
-                        <td>
-                            <a href="/edit_announcement/{{ announcement.announcement_id }}" class="btn btn-warning">编辑</a>
-                            <a href="/delete_announcement/{{ announcement.announcement_id }}" class="btn btn-danger">删除</a>
-                        </td>
+                        <td colspan="3">没有公告</td>
                     </tr>
-                {% endfor %}
+                {% endif %}
             </tbody>
         </table>
         <a href="/add_announcement" class="btn btn-primary">发布新公告</a>
