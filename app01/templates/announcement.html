@@ -58,8 +58,8 @@
             <tbody>
                 {% for announcement in announcements %}
                     <tr>
-                        <td>{{ announcement.title }}</td>
-                        <td>{{ announcement.publish_date }}</td>
+                        <td>{{ announcement.1 }}</td>
+                        <td>{{ announcement.2 }}</td>
                         <td>
                             <a href="/edit_announcement/{{ announcement.announcement_id }}" class="btn btn-warning">编辑</a>
                             <a href="/delete_announcement/{{ announcement.announcement_id }}" class="btn btn-danger">删除</a>
