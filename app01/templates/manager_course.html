@@ -21,6 +21,12 @@
         .navbar a:hover {
             color: #f8f9fa;
         }
+        .table-container {
+            margin-top: 30px;
+        }
+        .table th, .table td {
+            text-align: center;
+        }
         .btn-primary {
             background-color: #28a745;
             border: none;
@@ -31,40 +37,45 @@
     </style>
 </head>
 <body>
-
     <nav class="navbar navbar-expand-lg">
-        <a class="navbar-brand" href="#">管理课程</a>
+        <a class="navbar-brand" href="#">课程管理</a>
         <div class="ml-auto">
             <a href="/logout" class="btn btn-danger">退出登录</a>
         </div>
     </nav>
 
-    <div class="container mt-5">
-        <h3>课程列表</h3>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>课程名称</th>
-                    <th>课程类型</th>
-                    <th>学分</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for course in courses %}
+    <div class="container">
+        <h2 class="my-4">管理课程</h2>
+
+        {% if courses %}
+        <form method="POST">
+            {% csrf_token %}
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>课程名称</th>
+                        <th>平时成绩占比</th>
+                        <th>出勤成绩占比</th>
+                        <th>期末成绩占比</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in courses %}
                     <tr>
                         <td>{{ course.course_name }}</td>
-                        <td>{{ course.course_type }}</td>
-                        <td>{{ course.credits }}</td>
-                        <td>
-                            <a href="/edit_course/{{ course.course_id }}" class="btn btn-warning">编辑</a>
-                            <a href="/delete_course/{{ course.course_id }}" class="btn btn-danger">删除</a>
-                        </td>
+                        <td><input type="number" name="usual_weight_{{ course.id }}" value="{{ course.usual_weight }}" step="0.01" min="0" max="1" class="form-control" required></td>
+                        <td><input type="number" name="attendance_weight_{{ course.id }}" value="{{ course.attendance_weight }}" step="0.01" min="0" max="1" class="form-control" required></td>
+                        <td><input type="number" name="final_weight_{{ course.id }}" value="{{ course.final_weight }}" step="0.01" min="0" max="1" class="form-control" required></td>
+                        <td><button type="submit" class="btn btn-primary">更新占比</button></td>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <a href="/add_course" class="btn btn-primary">添加新课程</a>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </form>
+        {% else %}
+        <p>没有课程可管理。</p>
+        {% endif %}
     </div>
 
 </body>
