@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>添加课程</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">添加课程</a>
+        <div class="ml-auto">
+            <a href="/logout" class="btn btn-danger">退出登录</a>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="course_name">课程名称</label>
+                <input type="text" class="form-control" id="course_name" name="course_name" required>
+            </div>
+            <div class="form-group">
+                <label for="course_type">课程类型</label>
+                <select class="form-control" id="course_type" name="course_type" required>
+                    <option value="mandatory">必修</option>
+                    <option value="elective">选修</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="credits">学分</label>
+                <input type="number" class="form-control" id="credits" name="credits" required>
+            </div>
+            <button type="submit" class="btn btn-primary">提交</button>
+        </form>
+    </div>
+
+</body>
+</html>

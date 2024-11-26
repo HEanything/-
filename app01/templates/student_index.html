@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>学生仪表板</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9; /* 浅灰色背景 */
+            color: #333; /* 深灰色字体 */
+            font-family: Arial, sans-serif;
+        }
+        .navbar {
+            background-color: #007bff; /* 导航栏背景色 */
+        }
+        .navbar a {
+            color: white; /* 导航栏链接颜色 */
+        }
+        .navbar a:hover {
+            color: #f8f9fa; /* 导航栏链接悬停颜色 */
+        }
+        .dashboard-card {
+            background-color: #ffffff; /* 白色卡片背景 */
+            color: #333; /* 深灰色字体 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 卡片阴影 */
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .card-title {
+            color: #007bff; /* 卡片标题颜色 */
+        }
+        .btn-primary {
+            background-color: #28a745; /* 按钮颜色 */
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #218838; /* 按钮悬停颜色 */
+        }
+        .announcement-card {
+            background-color: #f8f9fa; /* 公告卡片背景色 */
+            color: #333;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .announcement-title {
+            color: #007bff;
+            font-size: 1.25rem;
+        }
+        .announcement-content {
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+        .announcement-footer {
+            font-size: 0.875rem;
+            color: #888;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">学生仪表板</a>
+        <div class="ml-auto">
+            <a href="/logout" class="btn btn-danger">退出登录</a>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row">
+            <!-- 学生仪表板内容 -->
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <h4 class="card-title">查看我的课程</h4>
+                    <p>查看您已注册的课程及其详情。</p>
+                    <a href="/my_courses" class="btn btn-primary">查看课程</a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <h4 class="card-title">查看我的成绩</h4>
+                    <p>查看您所有课程的成绩。</p>
+                    <a href="/my_scores" class="btn btn-primary">查看成绩</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 查看公告 -->
+        <div class="row">
+            <div class="col-12">
+                <div class="announcement-card">
+                    <h4 class="announcement-title">最新公告</h4>
+                    {% if announcements %}
+                        {% for announcement in announcements %}
+                            <div class="announcement">
+                                <h5>{{ announcement.0 }}</h5>
+                                <p class="announcement-content">{{ announcement.1 }}</p>
+                                <p class="announcement-footer">发布人：{{ announcement.3 }} | 发布时间：{{ announcement.2 }}</p>
+                            </div>
+                            <hr>
+                        {% endfor %}
+                    {% else %}
+                        <p>暂无公告。</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

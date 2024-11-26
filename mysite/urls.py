@@ -22,8 +22,13 @@ urlpatterns = [
     path("", views.login,name='login'),
     path("login/",views.login,name='login'),
     path('index/', views.index, name='index'),
+    path('student_index', views.student_index, name='student_index'),  # 学生仪表板
+    path('logout/', views.logout, name='logout'),
+    path('my_announcements/', views.my_announcements, name='my_announcements'),
+    path('my_courses/', views.my_courses, name='my_courses'),
+    path('my_scores/', views.my_scores, name='my_scores'),
+    path('manage_courses/', views.manage_courses, name='manage_courses'),
+    path('announcements/', views.announcements, name='announcements'),
 
-
-    path('table-datatable/', views.table_datatable, name='table_datatable'),
 
 ]

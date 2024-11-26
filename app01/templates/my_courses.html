@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>我的课程</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">我的课程</a>
+        <div class="ml-auto">
+            <a href="/logout" class="btn btn-danger">退出登录</a>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h3>我已注册的课程</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>课程名称</th>
+                    <th>课程类型</th>
+                    <th>学分</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in my_courses %}
+                    <tr>
+                        <td>{{ course.course_name }}</td>
+                        <td>{{ course.course_type }}</td>
+                        <td>{{ course.credits }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
