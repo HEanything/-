@@ -6,6 +6,40 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>我的成绩</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+            font-family: Arial, sans-serif;
+        }
+        .navbar {
+            background-color: #007bff;
+        }
+        .navbar a {
+            color: white;
+        }
+        .navbar a:hover {
+            color: #f8f9fa;
+        }
+        .dashboard-card {
+            background-color: #ffffff;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .card-title {
+            color: #007bff;
+        }
+        .btn-primary {
+            background-color: #28a745;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #218838;
+        }
+    </style>
 </head>
 <body>
 
@@ -17,7 +51,7 @@
     </nav>
 
     <div class="container mt-5">
-        <h3>我的课程成绩</h3>
+        <h3>我的成绩</h3>
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -30,14 +64,14 @@
                 </tr>
             </thead>
             <tbody>
-                {% for score in my_scores %}
+                {% for score in student_scores %}
                     <tr>
-                        <td>{{ score.course_name }}</td>
-                        <td>{{ score.usual_score }}</td>
-                        <td>{{ score.attendance_score }}</td>
-                        <td>{{ score.final_score }}</td>
-                        <td>{{ score.total_score }}</td>
-                        <td>{{ score.grade }}</td>
+                        <td>{{ score.0 }}</td>
+                        <td>{{ score.1 }}</td>
+                        <td>{{ score.2 }}</td>
+                        <td>{{ score.3 }}</td>
+                        <td>{{ score.4 }}</td>
+                        <td>{{ score.5 }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

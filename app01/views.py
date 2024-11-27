@@ -90,9 +90,47 @@ def login_view(request):
 def teacher_dashboard(req):
     return render(req,'index.html')
 
+
 def student_dashboard(request):
-    # 这里可以添加一些逻辑来获取学生的成绩、课程等信息
-    return render(request, 'student_index.html')
+    # 确保用户是学生
+    if request.session.get('role') != 'student':
+        messages.error(request, "请先登录")
+        return redirect('/login')
+
+    # 获取当前登录学生的ID
+    student_id = request.session.get('user_id')
+
+    # 初始化公告列表
+    announcements = []
+
+    # 连接数据库
+    conn = connect_db()
+    if conn is None:
+        messages.error(request, "无法连接数据库")
+        return redirect('/login')
+
+    try:
+        # 获取公告信息
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT title, content, publish_date, teacher_id
+                FROM Announcements
+                ORDER BY publish_date DESC
+                LIMIT 5;
+            """)
+            announcements = cursor.fetchall()
+
+        # 渲染模板并传递公告数据
+        return render(request, 'student_index.html', {
+            'announcements': announcements
+        })
+
+    except Exception as e:
+        messages.error(request, f"发生错误: {e}")
+        return redirect('/login')
+
+    finally:
+        close_db_connection(conn)
 def logout_view(request):
     # 清除会话中的用户信息
     request.session.flush()  # 清空会话数据
@@ -370,7 +408,8 @@ def add_announcement(request):
     return render(request, 'add_announcement.html')
 
 
-# 管理学生成绩的视图函数
+
+
 # 管理学生成绩的视图函数
 def manage_student_scores(request):
     if request.session.get('role') != 'teacher':
@@ -386,10 +425,11 @@ def manage_student_scores(request):
         return redirect('/login')
 
     try:
-        # 获取教师教授的所有课程
+        # 获取教师教授的所有课程和课程的占比
         with conn.cursor() as cursor:
             cursor.execute("""
-                SELECT id, course_name FROM Courses WHERE teacher_id = %s;
+                SELECT id, course_name, usual_score_ratio, attendance_score_ratio, final_score_ratio 
+                FROM Courses WHERE teacher_id = %s;
             """, (teacher_id,))
             courses = cursor.fetchall()
 
@@ -397,6 +437,10 @@ def manage_student_scores(request):
             for course in courses:
                 course_id = course[0]
                 course_name = course[1]
+                usual_score_ratio = decimal.Decimal(course[2]) # 转换为小数表示
+                attendance_score_ratio = decimal.Decimal(course[3])# 转换为小数表示
+                final_score_ratio = decimal.Decimal(course[4])  # 转换为小数表示
+
                 cursor.execute("""
                     SELECT s.student_id, s.name, ss.usual_score, ss.attendance_score, ss.final_score,
                            ss.total_score, ss.grade
@@ -408,6 +452,9 @@ def manage_student_scores(request):
 
                 course_data[course_id] = {
                     'course_name': course_name,
+                    'usual_score_ratio': usual_score_ratio,
+                    'attendance_score_ratio': attendance_score_ratio,
+                    'final_score_ratio': final_score_ratio,
                     'students': [
                         {
                             'student_id': score[0],
@@ -432,32 +479,39 @@ def manage_student_scores(request):
                         attendance_score = request.POST.get(f'attendance_score_{student_id}_{course_id}')
                         final_score = request.POST.get(f'final_score_{student_id}_{course_id}')
 
-                        # 更新成绩
-                        try:
-                            cursor.execute("""
-                                SELECT id FROM StudentScores WHERE student_id = %s AND course_id = %s;
-                            """, (student_id, course_id))
-                            result = cursor.fetchone()
+                        if usual_score is not None and attendance_score is not None and final_score is not None:
+                            # 按比例计算总成绩
+                            usual_score = decimal.Decimal(usual_score)
+                            attendance_score = decimal.Decimal(attendance_score)
+                            final_score = decimal.Decimal(final_score)
 
-                            if result:
-                                score_id = result[0]
-                                total_score = decimal.Decimal(usual_score) + decimal.Decimal(
-                                    attendance_score) + decimal.Decimal(final_score)
-                                grade = 'A' if total_score >= 90 else 'B' if total_score >= 80 else 'C' if total_score >= 70 else 'D' if total_score >= 60 else 'F'
+                            total_score = (usual_score * course_info['usual_score_ratio'] +
+                                           attendance_score * course_info['attendance_score_ratio'] +
+                                           final_score * course_info['final_score_ratio'])
 
-                                cursor.execute("""
-                                    UPDATE StudentScores
-                                    SET usual_score = %s, attendance_score = %s, final_score = %s,
-                                        total_score = %s, grade = %s
-                                    WHERE id = %s;
-                                """, (usual_score, attendance_score, final_score, total_score, grade, score_id))
-
-                                messages.success(request, f"学生 {score['student_name']} 的成绩更新成功！")
+                            # 根据总成绩计算成绩等级
+                            if total_score >= 90:
+                                grade = 'A'
+                            elif total_score >= 80:
+                                grade = 'B'
+                            elif total_score >= 70:
+                                grade = 'C'
+                            elif total_score >= 60:
+                                grade = 'D'
                             else:
-                                messages.error(request, f"找不到该学生 {score['student_name']} 的成绩记录！")
+                                grade = 'F'
 
-                        except Exception as e:
-                            messages.error(request, f"更新成绩时发生错误: {e}")
+                            # 更新成绩
+                            cursor.execute("""
+                                UPDATE StudentScores
+                                SET usual_score = %s, attendance_score = %s, final_score = %s,
+                                    total_score = %s, grade = %s
+                                WHERE student_id = %s AND course_id = %s;
+                            """, (usual_score, attendance_score, final_score, total_score, grade, student_id, course_id))
+
+                            messages.success(request, f"学生 {score['student_name']} 的成绩更新成功！")
+                        else:
+                            messages.error(request, f"学生 {score['student_name']} 的成绩没有更新，因为输入无效。")
 
             return redirect('/teacher_score')  # 成功更新后重定向回来
 
@@ -470,15 +524,84 @@ def manage_student_scores(request):
     finally:
         close_db_connection(conn)  # 关闭数据库连接
 
+
+
 # 学生查看已注册课程
 def my_courses(request):
+    # 确保用户是学生
+    if request.session.get('role') != 'student':
+        messages.error(request, "请先登录")
+        return redirect('/login')
 
-    return render(request, 'my_courses.html')
+    student_id = request.session.get('user_id')
+
+    # 连接数据库
+    conn = connect_db()
+    if conn is None:
+        messages.error(request, "无法连接数据库")
+        return redirect('/login')
+
+    my_courses = []
+
+    try:
+        with conn.cursor() as cursor:
+            # 查询学生已注册的课程信息
+            cursor.execute("""
+                SELECT c.course_name, c.course_code, c.usual_score_ratio, c.attendance_score_ratio, c.final_score_ratio
+                FROM Courses c
+                JOIN StudentCourses sc ON c.id = sc.course_id
+                WHERE sc.student_id = %s;
+            """, (student_id,))
+
+            # 获取所有课程信息
+            my_courses = cursor.fetchall()
+
+        return render(request, 'my_courses.html', {'my_courses': my_courses})
+
+    except Exception as e:
+        messages.error(request, f"发生错误: {e}")
+        return redirect('/login')
+
+    finally:
+        close_db_connection(conn)
 
 # 学生查看成绩
 def my_scores(request):
+    # 确保用户是学生
+    if request.session.get('role') != 'student':
+        messages.error(request, "请先登录")
+        return redirect('/login')
 
-    return render(request, 'my_scores.html')
+    student_id = request.session.get('user_id')
+
+    # 连接数据库
+    conn = connect_db()
+    if conn is None:
+        messages.error(request, "无法连接数据库")
+        return redirect('/login')
+
+    student_scores = []
+
+    try:
+        with conn.cursor() as cursor:
+            # 获取学生的成绩
+            cursor.execute("""
+                SELECT c.course_name, ss.usual_score, ss.attendance_score, ss.final_score, ss.total_score, ss.grade
+                FROM StudentScores ss
+                JOIN Courses c ON ss.course_id = c.id
+                WHERE ss.student_id = %s;
+            """, [student_id])
+
+            student_scores = cursor.fetchall()
+
+        return render(request, 'my_scores.html', {'student_scores': student_scores})
+
+    except Exception as e:
+        messages.error(request, f"发生错误: {e}")
+        return redirect('/login')
+
+    finally:
+        close_db_connection(conn)
 
 def my_announcements(request):
     # 假设学生公告是对所有学生可见的
