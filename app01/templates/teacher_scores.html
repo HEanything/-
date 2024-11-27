@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>查看成绩</title>
+    <title>管理学生成绩</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
@@ -37,51 +37,51 @@
     </style>
 </head>
 <body>
-
     <nav class="navbar navbar-expand-lg">
-        <a class="navbar-brand" href="#">教师查看成绩</a>
+        <a class="navbar-brand" href="#">学生成绩管理</a>
         <div class="ml-auto">
             <a href="/logout" class="btn btn-danger">退出登录</a>
         </div>
     </nav>
 
-    <div class="container table-container">
-        <h2>查看和修改学生成绩</h2>
+    <div class="container">
+        <h2 class="my-4">管理学生成绩</h2>
 
-        {% if scores %}
-        <form method="POST" action="{% url 'update_scores' %}">
-            {% csrf_token %}
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>学生姓名</th>
-                        <th>课程名称</th>
-                        <th>平时成绩</th>
-                        <th>出勤成绩</th>
-                        <th>期末成绩</th>
-                        <th>总成绩</th>
-                        <th>成绩等级</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for score in scores %}
-                    <tr>
-                        <td>{{ score.student.user_name }}</td>
-                        <td>{{ score.course.course_name }}</td>
-                        <td><input type="number" name="usual_score_{{ score.id }}" value="{{ score.usual_score }}" step="0.1" class="form-control"></td>
-                        <td><input type="number" name="attendance_score_{{ score.id }}" value="{{ score.attendance_score }}" step="0.1" class="form-control"></td>
-                        <td><input type="number" name="final_score_{{ score.id }}" value="{{ score.final_score }}" step="0.1" class="form-control"></td>
-                        <td>{{ score.total_score }}</td>
-                        <td>{{ score.grade }}</td>
-                        <td><button type="submit" name="edit_{{ score.id }}" class="btn btn-primary">保存</button></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </form>
+        {% if course_data %}
+            {% for course_id, course_info in course_data.items %}
+                <h3>{{ course_info.course_name }}</h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>学生姓名</th>
+                                <th>平时成绩</th>
+                                <th>出勤成绩</th>
+                                <th>期末成绩</th>
+                                <th>总成绩</th>
+                                <th>成绩等级</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for score in course_info.students %}
+                                <tr>
+                                    <td>{{ score.student_name }}</td>
+                                    <td><input type="number" name="usual_score_{{ score.student_id }}_{{ course_id }}" value="{{ score.usual_score }}" step="0.01" min="0" class="form-control"></td>
+                                    <td><input type="number" name="attendance_score_{{ score.student_id }}_{{ course_id }}" value="{{ score.attendance_score }}" step="0.01" min="0" class="form-control"></td>
+                                    <td><input type="number" name="final_score_{{ score.student_id }}_{{ course_id }}" value="{{ score.final_score }}" step="0.01" min="0" class="form-control"></td>
+                                    <td>{{ score.total_score }}</td>
+                                    <td>{{ score.grade }}</td>
+                                    <td><button type="submit" class="btn btn-primary">更新成绩</button></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </form>
+            {% endfor %}
         {% else %}
-        <p>没有成绩记录。</p>
+            <p>没有学生成绩可管理。</p>
         {% endif %}
     </div>
 

@@ -34,15 +34,14 @@ urlpatterns = [
     path('edit_announcement/<int:announcement_id>/', views.edit_announcement, name='edit_announcement'),
     path('delete_announcement/<int:announcement_id>/', views.delete_announcement, name='delete_announcement'),
     path('add_announcement/', views.add_announcement, name='add_announcement'),
-
-
+    path('teacher_score/', views.manage_student_scores, name='manage_student_score'),
 
     path('my_announcements/', views.my_announcements, name='my_announcements'),
     path('my_courses/', views.my_courses, name='my_courses'),
     path('my_scores/', views.my_scores, name='my_scores'),
 
 
-    path('teacher_scores/', views.teacher_scores, name='teacher_scores')
+
 
 
 
