@@ -54,6 +54,8 @@
                 <thead>
                     <tr>
                         <th>课程名称</th>
+                        <th>课程号</th>
+                        <th>课序号</th> <!-- 新增课序号列 -->
                         <th>平时成绩占比</th>
                         <th>出勤成绩占比</th>
                         <th>期末成绩占比</th>
@@ -64,9 +66,11 @@
                     {% for course in courses %}
                     <tr>
                         <td>{{ course.1 }}</td> <!-- 显示课程名称 -->
-                        <td><input type="number" name="usual_weight_{{ course.0 }}" value="{{ course.2 }}" step="0.01" min="0" max="1" class="form-control" required></td>
-                        <td><input type="number" name="attendance_weight_{{ course.0 }}" value="{{ course.3 }}" step="0.01" min="0" max="1" class="form-control" required></td>
-                        <td><input type="number" name="final_weight_{{ course.0 }}" value="{{ course.4 }}" step="0.01" min="0" max="1" class="form-control" required></td>
+                        <td>{{ course.0 }}</td>
+                        <td>{{ course.2 }}</td> <!-- 显示课序号 -->
+                        <td><input type="number" name="usual_weight_{{ course.0 }}_{{ course.2 }}" value="{{ course.3 }}" step="0.01" min="0" max="1" class="form-control" required></td>
+                        <td><input type="number" name="attendance_weight_{{ course.0 }}_{{ course.2 }}" value="{{ course.4 }}" step="0.01" min="0" max="1" class="form-control" required></td>
+                        <td><input type="number" name="final_weight_{{ course.0 }}_{{ course.2 }}" value="{{ course.5 }}" step="0.01" min="0" max="1" class="form-control" required></td>
                         <td><button type="submit" class="btn btn-primary">更新占比</button></td>
                     </tr>
                     {% endfor %}

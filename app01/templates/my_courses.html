@@ -6,9 +6,30 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>我的课程</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+            font-family: Arial, sans-serif;
+        }
+        .navbar {
+            background-color: #007bff;
+        }
+        .navbar a {
+            color: white;
+        }
+        .navbar a:hover {
+            color: #f8f9fa;
+        }
+        .table-container {
+            margin-top: 30px;
+        }
+        .table th, .table td {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-
     <nav class="navbar navbar-expand-lg">
         <a class="navbar-brand" href="#">我的课程</a>
         <div class="ml-auto">
@@ -16,30 +37,35 @@
         </div>
     </nav>
 
-    <div class="container mt-5">
-        <h3>我已注册的课程</h3>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>课程名称</th>
-                    <th>课程代码</th>
-                    <th>平时成绩占比</th>
-                    <th>出勤成绩占比</th>
-                    <th>期末成绩占比</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for course in my_courses %}
+    <div class="container">
+        <h2 class="my-4">我所选的课程</h2>
+
+        {% if my_courses %}
+            <table class="table table-bordered">
+                <thead>
                     <tr>
-                        <td>{{ course.0 }}</td>
-                        <td>{{ course.1 }}</td>
-                        <td>{{ course.2 }}%</td>
-                        <td>{{ course.3 }}%</td>
-                        <td>{{ course.4 }}%</td>
+                        <th>课程名称</th>
+                        <th>课程代码</th>
+                        <th>课序号</th>
+                        <th>课程类型</th>
+                        <th>学分</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for course in my_courses %}
+                        <tr>
+                            <td>{{ course.0 }}</td>
+                            <td>{{ course.1 }}</td>
+                            <td>{{ course.2 }}</td>
+                            <td>{{ course.3 }}</td>
+                            <td>{{ course.4 }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>您还没有选修任何课程。</p>
+        {% endif %}
     </div>
 
 </body>

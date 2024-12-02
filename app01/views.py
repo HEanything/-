@@ -13,7 +13,7 @@ from app01.models import Course
 def connect_db():
     try:
         conn = psycopg2.connect(
-            database="stu_score",
+            database="Score_Manage",
             user="postgres",
             password="123",
             host="localhost",
@@ -87,8 +87,12 @@ def login_view(request):
 
 
 
-def teacher_dashboard(req):
-    return render(req,'index.html')
+def teacher_dashboard(request):
+    if request.session.get('role') != 'teacher':
+        messages.error(request, "请先登录")
+        return redirect('/login')
+    username=request.session.get('username')
+    return render(request,'index.html')
 
 
 def student_dashboard(request):
@@ -97,6 +101,7 @@ def student_dashboard(request):
         messages.error(request, "请先登录")
         return redirect('/login')
 
+    username = request.session.get('username')
     # 获取当前登录学生的ID
     student_id = request.session.get('user_id')
 
@@ -137,8 +142,6 @@ def logout_view(request):
     return redirect('/login')  # 重定向到登录页面
 
 
-# 课程管理视图
-# 课程管理视图
 def manage_courses(request):
     # 检查用户角色是否为教师
     if request.session.get('role') != 'teacher':
@@ -154,22 +157,25 @@ def manage_courses(request):
         return redirect('/login')
 
     try:
-        # 获取教师教授的所有课程
+        # 获取教师教授的所有课程，包含课序号
         cur = conn.cursor()
         cur.execute("""
-            SELECT id, course_name, usual_score_ratio, attendance_score_ratio, final_score_ratio
-            FROM Courses
-            WHERE teacher_id = %s
+            SELECT tc.course_code, c.course_name, tc.course_seq, tc.usual_score_ratio, 
+                   tc.attendance_score_ratio, tc.final_score_ratio
+            FROM TeacherCourses tc
+            JOIN Courses c ON tc.course_code = c.course_code
+            WHERE tc.teacher_id = %s
         """, (teacher_id,))
         courses = cur.fetchall()  # 获取所有课程信息
 
         if request.method == 'POST':
             # 遍历所有提交的课程成绩占比数据
             for course in courses:
-                course_id = course[0]
-                usual_weight = request.POST.get(f'usual_weight_{course_id}')
-                attendance_weight = request.POST.get(f'attendance_weight_{course_id}')
-                final_weight = request.POST.get(f'final_weight_{course_id}')
+                course_code = course[0]
+                course_seq = course[2]  # 获取课序号
+                usual_weight = request.POST.get(f'usual_weight_{course_code}_{course_seq}')
+                attendance_weight = request.POST.get(f'attendance_weight_{course_code}_{course_seq}')
+                final_weight = request.POST.get(f'final_weight_{course_code}_{course_seq}')
 
                 try:
                     # 更新课程的成绩占比
@@ -179,21 +185,23 @@ def manage_courses(request):
 
                     # 执行更新
                     cur.execute("""
-                        UPDATE Courses
+                        UPDATE TeacherCourses
                         SET usual_score_ratio = %s, attendance_score_ratio = %s, final_score_ratio = %s
-                        WHERE id = %s
-                    """, (usual_weight, attendance_weight, final_weight, course_id))
+                        WHERE course_code = %s AND course_seq = %s AND teacher_id = %s
+                    """, (usual_weight, attendance_weight, final_weight, course_code, course_seq, teacher_id))
 
                     conn.commit()  # 提交事务
-                    messages.success(request, f'课程 {course[1]} 更新成功')  # course[1] 是课程名称
+                    messages.success(request, f'课程 {course[1]}（课序号: {course_seq}）更新成功')
                 except ValueError:
                     messages.error(request, '请输入有效的成绩占比')
 
             # 更新数据库后，重新查询最新的课程数据
             cur.execute("""
-                SELECT id, course_name, usual_score_ratio, attendance_score_ratio, final_score_ratio
-                FROM Courses
-                WHERE teacher_id = %s
+                SELECT tc.course_code, c.course_name, tc.course_seq, tc.usual_score_ratio, 
+                       tc.attendance_score_ratio, tc.final_score_ratio
+                FROM TeacherCourses tc
+                JOIN Courses c ON tc.course_code = c.course_code
+                WHERE tc.teacher_id = %s
             """, (teacher_id,))
             courses = cur.fetchall()  # 重新获取所有课程信息
 
@@ -207,6 +215,8 @@ def manage_courses(request):
     finally:
         if conn:
             close_db_connection(conn)
+
+
 
 
 
@@ -410,7 +420,6 @@ def add_announcement(request):
 
 
 
-# 管理学生成绩的视图函数
 def manage_student_scores(request):
     if request.session.get('role') != 'teacher':
         messages.error(request, "请先登录")
@@ -428,30 +437,35 @@ def manage_student_scores(request):
         # 获取教师教授的所有课程和课程的占比
         with conn.cursor() as cursor:
             cursor.execute("""
-                SELECT id, course_name, usual_score_ratio, attendance_score_ratio, final_score_ratio 
-                FROM Courses WHERE teacher_id = %s;
+                SELECT c.course_code, c.course_name, tc.course_seq, tc.usual_score_ratio, 
+                       tc.attendance_score_ratio, tc.final_score_ratio 
+                FROM TeacherCourses tc
+                JOIN Courses c ON tc.course_code = c.course_code
+                WHERE tc.teacher_id = %s;
             """, (teacher_id,))
             courses = cursor.fetchall()
 
             # 获取每门课程的学生成绩
             for course in courses:
-                course_id = course[0]
+                course_code = course[0]
                 course_name = course[1]
-                usual_score_ratio = decimal.Decimal(course[2]) # 转换为小数表示
-                attendance_score_ratio = decimal.Decimal(course[3])# 转换为小数表示
-                final_score_ratio = decimal.Decimal(course[4])  # 转换为小数表示
+                course_seq = course[2]
+                usual_score_ratio = decimal.Decimal(course[3]) # 转换为小数表示
+                attendance_score_ratio = decimal.Decimal(course[4]) # 转换为小数表示
+                final_score_ratio = decimal.Decimal(course[5]) # 转换为小数表示
 
                 cursor.execute("""
                     SELECT s.student_id, s.name, ss.usual_score, ss.attendance_score, ss.final_score,
                            ss.total_score, ss.grade
                     FROM StudentScores ss
                     JOIN Students s ON ss.student_id = s.student_id
-                    WHERE ss.course_id = %s;
-                """, (course_id,))
+                    WHERE ss.course_code = %s AND ss.course_seq = %s;
+                """, (course_code, course_seq))
                 student_scores = cursor.fetchall()
 
-                course_data[course_id] = {
+                course_data[(course_code, course_seq)] = {
                     'course_name': course_name,
+                    'course_seq': course_seq,
                     'usual_score_ratio': usual_score_ratio,
                     'attendance_score_ratio': attendance_score_ratio,
                     'final_score_ratio': final_score_ratio,
@@ -472,12 +486,12 @@ def manage_student_scores(request):
         if request.method == 'POST':
             # 遍历所有提交的学生成绩数据并更新
             with conn.cursor() as cursor:
-                for course_id, course_info in course_data.items():
+                for (course_code, course_seq), course_info in course_data.items():
                     for score in course_info['students']:
                         student_id = score['student_id']
-                        usual_score = request.POST.get(f'usual_score_{student_id}_{course_id}')
-                        attendance_score = request.POST.get(f'attendance_score_{student_id}_{course_id}')
-                        final_score = request.POST.get(f'final_score_{student_id}_{course_id}')
+                        usual_score = request.POST.get(f'usual_score_{student_id}_{course_code}_{course_seq}')
+                        attendance_score = request.POST.get(f'attendance_score_{student_id}_{course_code}_{course_seq}')
+                        final_score = request.POST.get(f'final_score_{student_id}_{course_code}_{course_seq}')
 
                         if usual_score is not None and attendance_score is not None and final_score is not None:
                             # 按比例计算总成绩
@@ -506,8 +520,8 @@ def manage_student_scores(request):
                                 UPDATE StudentScores
                                 SET usual_score = %s, attendance_score = %s, final_score = %s,
                                     total_score = %s, grade = %s
-                                WHERE student_id = %s AND course_id = %s;
-                            """, (usual_score, attendance_score, final_score, total_score, grade, student_id, course_id))
+                                WHERE student_id = %s AND course_code = %s AND course_seq = %s;
+                            """, (usual_score, attendance_score, final_score, total_score, grade, student_id, course_code, course_seq))
 
                             messages.success(request, f"学生 {score['student_name']} 的成绩更新成功！")
                         else:
@@ -523,6 +537,8 @@ def manage_student_scores(request):
 
     finally:
         close_db_connection(conn)  # 关闭数据库连接
+
+
 
 
 
@@ -547,9 +563,10 @@ def my_courses(request):
         with conn.cursor() as cursor:
             # 查询学生已注册的课程信息
             cursor.execute("""
-                SELECT c.course_name, c.course_code, c.usual_score_ratio, c.attendance_score_ratio, c.final_score_ratio
+                SELECT c.course_name, c.course_code, tc.course_seq, c.course_type, c.credits
                 FROM Courses c
-                JOIN StudentCourses sc ON c.id = sc.course_id
+                JOIN StudentCourses sc ON c.course_code = sc.course_code
+                JOIN TeacherCourses tc ON c.course_code = tc.course_code
                 WHERE sc.student_id = %s;
             """, (student_id,))
 
@@ -564,6 +581,8 @@ def my_courses(request):
 
     finally:
         close_db_connection(conn)
+
+
 
 # 学生查看成绩
 def my_scores(request):
@@ -584,11 +603,12 @@ def my_scores(request):
 
     try:
         with conn.cursor() as cursor:
-            # 获取学生的成绩
+            # 获取学生的成绩信息，包括课程名称、成绩、课程类型和学分
             cursor.execute("""
-                SELECT c.course_name, ss.usual_score, ss.attendance_score, ss.final_score, ss.total_score, ss.grade
+                SELECT c.course_name, ss.usual_score, ss.attendance_score, ss.final_score, ss.total_score, ss.grade, 
+                       c.course_type, c.credits
                 FROM StudentScores ss
-                JOIN Courses c ON ss.course_id = c.id
+                JOIN Courses c ON ss.course_code = c.course_code
                 WHERE ss.student_id = %s;
             """, [student_id])
 
@@ -602,6 +622,7 @@ def my_scores(request):
 
     finally:
         close_db_connection(conn)
+
 
 def my_announcements(request):
     # 假设学生公告是对所有学生可见的
