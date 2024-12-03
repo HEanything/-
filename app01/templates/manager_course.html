@@ -34,6 +34,11 @@
         .btn-primary:hover {
             background-color: #218838;
         }
+        .grade-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -55,10 +60,11 @@
                     <tr>
                         <th>课程名称</th>
                         <th>课程号</th>
-                        <th>课序号</th> <!-- 新增课序号列 -->
+                        <th>课序号</th>
                         <th>平时成绩占比</th>
                         <th>出勤成绩占比</th>
                         <th>期末成绩占比</th>
+                        <th>成绩等级占比</th>
                         <th>操作</th>
                     </tr>
                 </thead>
@@ -71,6 +77,13 @@
                         <td><input type="number" name="usual_weight_{{ course.0 }}_{{ course.2 }}" value="{{ course.3 }}" step="0.01" min="0" max="1" class="form-control" required></td>
                         <td><input type="number" name="attendance_weight_{{ course.0 }}_{{ course.2 }}" value="{{ course.4 }}" step="0.01" min="0" max="1" class="form-control" required></td>
                         <td><input type="number" name="final_weight_{{ course.0 }}_{{ course.2 }}" value="{{ course.5 }}" step="0.01" min="0" max="1" class="form-control" required></td>
+                        <td>
+                            <div class="grade-info">
+                                {% for grade, percentage in course.6.items %}
+                                    {{ grade }}: {{ percentage|floatformat:2 }}% {% if not forloop.last %}| {% endif %}
+                                {% endfor %}
+                            </div>
+                        </td>
                         <td><button type="submit" class="btn btn-primary">更新占比</button></td>
                     </tr>
                     {% endfor %}
@@ -84,3 +97,4 @@
 
 </body>
 </html>
+

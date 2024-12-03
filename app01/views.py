@@ -141,9 +141,7 @@ def logout_view(request):
     request.session.flush()  # 清空会话数据
     return redirect('/login')  # 重定向到登录页面
 
-
 def manage_courses(request):
-    # 检查用户角色是否为教师
     if request.session.get('role') != 'teacher':
         messages.error(request, "请先登录")
         return redirect('/login')
@@ -168,11 +166,33 @@ def manage_courses(request):
         """, (teacher_id,))
         courses = cur.fetchall()  # 获取所有课程信息
 
+        # 获取每个课程的成绩等级占比
+        for idx, course in enumerate(courses):
+            course_code = course[0]
+            course_seq = course[2]
+
+            # 查询每个课程的成绩等级分布
+            cur.execute("""
+                SELECT grade, COUNT(*) 
+                FROM StudentScores 
+                WHERE course_code = %s AND course_seq = %s
+                GROUP BY grade
+            """, (course_code, course_seq))
+            grade_distribution = cur.fetchall()
+
+            # 计算每个等级的占比
+            total_students = sum([count for _, count in grade_distribution])
+            grade_percentages = {grade: (count / total_students) * 100 if total_students > 0 else 0
+                                 for grade, count in grade_distribution}
+
+            # 将等级占比数据传递到课程数据中
+            courses[idx] = (*course, grade_percentages)
+
         if request.method == 'POST':
-            # 遍历所有提交的课程成绩占比数据
+            # 处理成绩占比更新逻辑
             for course in courses:
                 course_code = course[0]
-                course_seq = course[2]  # 获取课序号
+                course_seq = course[2]
                 usual_weight = request.POST.get(f'usual_weight_{course_code}_{course_seq}')
                 attendance_weight = request.POST.get(f'attendance_weight_{course_code}_{course_seq}')
                 final_weight = request.POST.get(f'final_weight_{course_code}_{course_seq}')
@@ -195,7 +215,7 @@ def manage_courses(request):
                 except ValueError:
                     messages.error(request, '请输入有效的成绩占比')
 
-            # 更新数据库后，重新查询最新的课程数据
+            # 更新数据库后，重新查询最新的课程数据，并获取成绩等级占比
             cur.execute("""
                 SELECT tc.course_code, c.course_name, tc.course_seq, tc.usual_score_ratio, 
                        tc.attendance_score_ratio, tc.final_score_ratio
@@ -203,7 +223,29 @@ def manage_courses(request):
                 JOIN Courses c ON tc.course_code = c.course_code
                 WHERE tc.teacher_id = %s
             """, (teacher_id,))
-            courses = cur.fetchall()  # 重新获取所有课程信息
+            courses = cur.fetchall()
+
+            # 重新计算每个课程的成绩等级占比
+            for idx, course in enumerate(courses):
+                course_code = course[0]
+                course_seq = course[2]
+
+                # 查询每个课程的成绩等级分布
+                cur.execute("""
+                    SELECT grade, COUNT(*) 
+                    FROM StudentScores 
+                    WHERE course_code = %s AND course_seq = %s
+                    GROUP BY grade
+                """, (course_code, course_seq))
+                grade_distribution = cur.fetchall()
+
+                # 计算每个等级的占比
+                total_students = sum([count for _, count in grade_distribution])
+                grade_percentages = {grade: (count / total_students) * 100 if total_students > 0 else 0
+                                     for grade, count in grade_distribution}
+
+                # 将等级占比数据传递到课程数据中
+                courses[idx] = (*course, grade_percentages)
 
         # 将课程数据传递到模板中
         return render(request, 'manager_course.html', {'courses': courses})
@@ -215,6 +257,8 @@ def manage_courses(request):
     finally:
         if conn:
             close_db_connection(conn)
+
+
 
 
 
